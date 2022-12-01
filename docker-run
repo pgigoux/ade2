@@ -1,0 +1,33 @@
+#!/bin/bash
+
+if [ "$#" -eq 2 ]; then
+    name=$1
+    registry=$2
+else
+    echo "Usage: docker-run: name registry"
+    exit
+fi
+
+docker run \
+    -d \
+    --restart always \
+    --cap-add SYS_ADMIN \
+    --name ${name} \
+    --hostname ${name} \
+    --tmpfs /tmp \
+    --tmpfs /run \
+    --network host \
+    --mount type=bind,source=/gem_base/etc/rtconfig,target=/gem_base/etc/rtconfig \
+    -v /home:/home \
+    -v /gem_test:/gem_test \
+    -v /gem_prod:/gem_prod \
+    -v /etc/passwd:/etc/passwd:ro \
+    -v /etc/group:/etc/group:ro \
+    -v /etc/shadow:/etc/shadow:ro \
+    -v /etc/sudoers:/etc/sudoers:ro \
+    -v /etc/sudoers.d:/etc/sudoers.d:ro \
+    -v /etc/gshadow:/etc/gshadow:ro \
+    -v /etc/nsswitch.conf:/etc/nsswitch.conf:ro \
+    -v /sys/fs/cgroup:/sys/fs/cgroup:ro \
+    -v /var/lib/sss/pipes/:/var/lib/sss/pipes/:rw \
+    ${registry}

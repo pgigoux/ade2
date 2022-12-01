@@ -1,0 +1,23 @@
+#!/bin/bash
+
+if [ "$#" -eq 1 ]; then
+    container=$1
+else
+    echo "Usage: docker-bash: container"
+    exit
+
+fi
+echo $container
+
+if [[ -z "${PROJECTNAME}" ]]; then
+    echo "Warning: PROJECTNAME not defined"
+fi
+
+docker exec \
+    -it \
+    --user=$(id -u):$(id -g) \
+    --env USER=$USER \
+    --env PROJECTNAME=$PROJECTNAME \
+    --env TESTING_INSTALL_LOCATION=$TESTING_INSTALL_LOCATION \
+    -w $PWD ${container} \
+    /bin/bash -l

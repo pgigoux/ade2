@@ -1,0 +1,9 @@
+#!/bin/bash
+
+if [ "$#" -eq 1 ]; then
+    filter="grep $1"
+else
+    filter="cat"
+fi
+
+docker container list -a --format 'table {{.ID}}\t{{.Image}}\t{{.Names}}\t{{.Status}}' | ${filter}

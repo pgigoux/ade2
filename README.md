@@ -3,7 +3,7 @@ ADE 2 scripts
 
 * `docker-list` list repositories using a shorter output
 
-      Usage: docker-list [match string]
+      Usage: docker-list [matching string]
 
 * `docker-run` Create a new repository
 

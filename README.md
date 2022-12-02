@@ -7,7 +7,7 @@ ADE 2 scripts
 
 * `docker-run` Create a new repository
 
-      Usage: docker-run <container name> <image>
+      Usage: docker-run <container name> <image name>
 
 * `docker-bash` Start an interactive session in a docker container
 

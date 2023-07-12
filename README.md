@@ -12,3 +12,5 @@ ADE 2 scripts
 * `docker-bash` Start an interactive session in a docker container
 
       Usage: docker-bash <container name>
+
+* `check-alarms.py` Check alarm severity in EPICS records (uses pyepics)

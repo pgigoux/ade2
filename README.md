@@ -14,3 +14,6 @@ ADE 2 scripts
       Usage: docker-bash <container name>
 
 * `check-alarms.py` Check alarm severity in EPICS records (uses pyepics)
+
+      Usage: check_alarms <input_file> [--noudf] [-h]
+

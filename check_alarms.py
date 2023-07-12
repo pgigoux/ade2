@@ -75,15 +75,17 @@ def print_line(record_name: str, alarms: dict, csv_output=False):
     print(line)
 
 
-def process_file(file_name: str, no_udf_flag=False, csv_output=False) -> list:
+def process_file(file_name: str, ignore_udf=False, csv_output=False) -> list:
     """
     :param file_name: file name
+    :param ignore_udf: ignore undefined alarms?
+    :param csv_output: output in csv format?
     :return: list with output
     """
     try:
         f = open(file_name, 'r')
     except FileNotFoundError:
-        print(f'file ${file_name} does not exist')
+        print(f'file {file_name} does not exist')
         return []
 
     no_msg_flag = True
@@ -96,6 +98,8 @@ def process_file(file_name: str, no_udf_flag=False, csv_output=False) -> list:
         d = default_dictionary()
 
         for field_name in field_list:
+
+            # Get the channel value.
             value = PV(channel_name(record_name, field_name)).get(as_string=True, timeout=GET_TIMEOUT)
             if value is None:
                 timeout = True
@@ -103,9 +107,15 @@ def process_file(file_name: str, no_udf_flag=False, csv_output=False) -> list:
                 break
             else:
                 d[field_name] = value
+
+            # The undefined alarm status is sometimes reported as a numeric value
+            # Convert to the string equivalent.
             if d[field_name] == STATUS_UNDEFINED:
                 d[field_name] = 'UDF'
 
+        # Process the message fields
+        # The no_msg_flag will be set if the prgram fails to read any of the message fiels.
+        # This will prevent timeout while getting these fields down the road.
         if no_msg_flag:
             for field_name in message_field_list:
                 value = PV(channel_name(record_name, field_name)).get(as_string=True, timeout=GET_TIMEOUT)
@@ -115,18 +125,19 @@ def process_file(file_name: str, no_udf_flag=False, csv_output=False) -> list:
                 else:
                     d[field_name] = value
 
-        # Skip records that have no alarms
+        # Skip record if there was a timeout or if there are no alarms
+        # Ignoring the UDF alarm state is also done at this point.
         if timeout:
             continue
         else:
             no_alarm = (d[ALARM_SEVERITY] == SEVERITY_NO_ALARM,
                         d[ALARM_STATUS] == STATUS_NO_ALARM,
                         d[NEW_ALARM_SEVERITY] == SEVERITY_NO_ALARM)
-            if all(no_alarm) or (d[ALARM_STATUS] == 'UDF' and no_udf_flag):
+            if all(no_alarm) or (d[ALARM_STATUS] == 'UDF' and ignore_udf):
                 continue
 
-        print_line(record_name, d, csv_output=False)
-
+        # The program will get here only if there are alarms
+        print_line(record_name, d, csv_output=csv_output)
 
 
 if __name__ == '__main__':
@@ -138,14 +149,21 @@ if __name__ == '__main__':
                         help='file with channel names',
                         default='')
 
-    parser.add_argument('-n', '--noudf',
+    parser.add_argument('-i', '--ignore-udf',
                         action='store_true',
-                        dest='noudf',
+                        dest='ignore_udf',
                         default=False,
                         help='do not report undefined records (UDF)')
 
+    parser.add_argument('--csv',
+                        action='store_true',
+                        dest='csv',
+                        default=False,
+                        help='format output as csv')
+
     args = parser.parse_args()
 
-
-    process_file(args.input_file, no_udf_flag=args.noudf)
-    # print(default_dictionary())
+    try:
+        process_file(args.input_file, ignore_udf=args.ignore_udf, csv_output=args.csv)
+    except KeyboardInterrupt:
+        print('Aborted')

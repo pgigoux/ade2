@@ -235,7 +235,7 @@ if __name__ == '__main__':
                         action='store_true',
                         dest='ca',
                         default=False,
-                        help='use low lever interface (minimizes IOC memory usage)')
+                        help='use low level interface (minimizes IOC memory usage)')
 
     args = parser.parse_args()
 

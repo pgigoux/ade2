@@ -19,7 +19,7 @@ SEVERITY_NO_ALARM = 'NO_ALARM'
 STATUS_NO_ALARM = 'NO_ALARM'
 
 # Read timeout (seconds)
-GET_TIMEOUT = 2
+GET_TIMEOUT = 4
 
 # Alarm fields that should be present in all records.
 # The description is in this list as well as additional data.

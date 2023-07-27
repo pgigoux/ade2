@@ -205,7 +205,7 @@ def process_file(file_name: str, include_udf=False, csv_output=False, use_pv=Fal
             no_alarm = (d[ALARM_SEVERITY] == SEVERITY_NO_ALARM,
                         d[ALARM_STATUS] == STATUS_NO_ALARM,
                         d[NEW_ALARM_SEVERITY] == SEVERITY_NO_ALARM)
-            if all(no_alarm) or (d[ALARM_STATUS] == 'UDF' and include_udf):
+            if all(no_alarm) or (d[ALARM_STATUS] == 'UDF' and not include_udf):
                 continue
 
         # The program will get here only if there are alarms

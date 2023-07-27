@@ -239,8 +239,7 @@ if __name__ == '__main__':
                         default=False,
                         help='use the high level channel interface interface')
 
-    # args = parser.parse_args()
-    args = parser.parse_args(['--csv', 'gws.txt'])
+    args = parser.parse_args()
 
     try:
         process_file(args.input_file, include_udf=args.include_udf,

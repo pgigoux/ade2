@@ -19,7 +19,7 @@ SEVERITY_NO_ALARM = 'NO_ALARM'
 STATUS_NO_ALARM = 'NO_ALARM'
 
 # Read timeout (seconds)
-GET_TIMEOUT = 4
+GET_TIMEOUT = 5
 
 # Alarm fields that should be present in all records.
 # The description is in this list as well as additional data.
@@ -116,34 +116,37 @@ def print_line(record_name: str, alarms: dict, csv_output=False):
     print(line)
 
 
-def get_channel_value(record_name: str, field_name: str, use_ca=False) -> Union[str, None]:
+def get_channel_value(record_name: str, field_name: str, use_pv=False) -> Union[str, None]:
     """
     Get a channel (record + field) value.
     The low level interface will close and clean the connection
     to minimize memory usage on the server side.
     :param record_name: record name
     :param field_name: field name
-    :param use_ca: use low level interface
-    :return: value or None if unable to read the value
+    :param use_pv: use high level channel access interface
+    :return: channel value or None if unable to read the value
     """
     channel_name = f'{record_name}.{field_name}'
-    if use_ca:
+    if use_pv:
+        print('PV')
+        pv = PV(channel_name)
+        value = pv.get(as_string=True, timeout=GET_TIMEOUT)
+    else:
         channel_id = ca.create_channel(channel_name, connect=False, callback=None, auto_cb=False)
-        if not ca.connect_channel(channel_id, timeout=GET_TIMEOUT, verbose=False):
+        connect_flag = ca.connect_channel(channel_id, timeout=GET_TIMEOUT, verbose=False)
+        if not connect_flag:
             return None
         value = ca.get(channel_id, as_string=True, as_numpy=False, wait=True, timeout=GET_TIMEOUT)
         ca.clear_channel(channel_id)
-    else:
-        pv = PV(channel_name)
-        value = pv.get(as_string=True, timeout=GET_TIMEOUT)
     return value
 
 
-def process_file(file_name: str, ignore_udf=False, csv_output=False, use_ca=False) -> list:
+def process_file(file_name: str, include_udf=False, csv_output=False, use_pv=False) -> list:
     """
     :param file_name: file name
-    :param ignore_udf: ignore undefined alarms?
+    :param include_udf: include undefined alarms?
     :param csv_output: output in csv format?
+    :param use_pv: use PV interface for channel access?
     :return: list with output
     """
     try:
@@ -152,7 +155,7 @@ def process_file(file_name: str, ignore_udf=False, csv_output=False, use_ca=Fals
         print(f'file {file_name} does not exist')
         return []
 
-    no_msg_flag = True
+    msg_flag = True
     print_title(csv_output=csv_output)
 
     for line in f:
@@ -166,8 +169,7 @@ def process_file(file_name: str, ignore_udf=False, csv_output=False, use_ca=Fals
         for field_name in field_list:
 
             # Get the channel value.
-            # value = PV(channel_name(record_name, field_name)).get(as_string=True, timeout=GET_TIMEOUT)
-            value = get_channel_value(record_name, field_name, use_ca=use_ca)
+            value = get_channel_value(record_name, field_name, use_pv=use_pv)
             if value is None:
                 timeout = True
                 print(f'connection timeout {record_name}')
@@ -185,12 +187,12 @@ def process_file(file_name: str, ignore_udf=False, csv_output=False, use_ca=Fals
         # Process the message fields
         # The no_msg_flag will be set if the program fails to read any of them.
         # This will prevent timeouts while getting these fields down the road.
-        if no_msg_flag:
+        if msg_flag:
             for field_name in message_field_list:
                 # value = PV(channel_name(record_name, field_name)).get(as_string=True, timeout=GET_TIMEOUT)
-                value = get_channel_value(record_name, field_name, use_ca=use_ca)
+                value = get_channel_value(record_name, field_name, use_pv=use_pv)
                 if value is None:
-                    no_msg_flag = False
+                    msg_flag = False
                     break
                 else:
                     d[field_name] = value
@@ -203,7 +205,7 @@ def process_file(file_name: str, ignore_udf=False, csv_output=False, use_ca=Fals
             no_alarm = (d[ALARM_SEVERITY] == SEVERITY_NO_ALARM,
                         d[ALARM_STATUS] == STATUS_NO_ALARM,
                         d[NEW_ALARM_SEVERITY] == SEVERITY_NO_ALARM)
-            if all(no_alarm) or (d[ALARM_STATUS] == 'UDF' and ignore_udf):
+            if all(no_alarm) or (d[ALARM_STATUS] == 'UDF' and include_udf):
                 continue
 
         # The program will get here only if there are alarms
@@ -219,11 +221,11 @@ if __name__ == '__main__':
                         help='file with record names',
                         default='')
 
-    parser.add_argument('-i', '--ignore-udf',
+    parser.add_argument('--udf',
                         action='store_true',
-                        dest='ignore_udf',
+                        dest='include_udf',
                         default=False,
-                        help='do not report undefined records (UDF)')
+                        help='include undefined records in the report (UDF)')
 
     parser.add_argument('--csv',
                         action='store_true',
@@ -231,16 +233,17 @@ if __name__ == '__main__':
                         default=False,
                         help='format output as csv')
 
-    parser.add_argument('--ca',
+    parser.add_argument('--pv',
                         action='store_true',
-                        dest='ca',
+                        dest='pv',
                         default=False,
-                        help='use low level interface (minimizes IOC memory usage)')
+                        help='use the high level channel interface interface')
 
-    args = parser.parse_args()
+    # args = parser.parse_args()
+    args = parser.parse_args(['--csv', 'gws.txt'])
 
     try:
-        process_file(args.input_file, ignore_udf=args.ignore_udf,
-                     csv_output=args.csv, use_ca=args.ca)
+        process_file(args.input_file, include_udf=args.include_udf,
+                     csv_output=args.csv, use_pv=args.pv)
     except KeyboardInterrupt:
         print('Aborted')

@@ -1,4 +1,17 @@
 #!/usr/bin/env python3
+"""
+Look for records that have alarm severity or status different than NO_ALARM.
+This program was written for a conda environment running EPICS 7 and pyepics 3.5.0 (Rocky8)
+
+Installation:
+* conda create --name=py36 python=3.6
+* conda activate py36
+* pip install pyepics
+
+Running:
+* conda activate py36
+* ./check_alarms.py [options] <file>
+"""
 import argparse
 from typing import Union
 from epics import PV
@@ -62,7 +75,7 @@ alarm_dict = {
 
 def default_dictionary() -> dict:
     """
-    Return a dictionary used to store alarms with default values
+    Return a dictionary with default output values
     :return: default value dictionary
     """
     d = {ALARM_SEVERITY: SEVERITY_NO_ALARM,
@@ -119,8 +132,7 @@ def print_line(record_name: str, alarms: dict, csv_output=False):
 def get_channel_value(record_name: str, field_name: str, use_pv=False) -> Union[str, None]:
     """
     Get a channel (record + field) value.
-    The low level interface will close and clean the connection
-    to minimize memory usage on the server side.
+    The low level interface will close and clean the connection to minimize memory usage on the server side.
     :param record_name: record name
     :param field_name: field name
     :param use_pv: use high level channel access interface
@@ -128,7 +140,6 @@ def get_channel_value(record_name: str, field_name: str, use_pv=False) -> Union[
     """
     channel_name = f'{record_name}.{field_name}'
     if use_pv:
-        print('PV')
         pv = PV(channel_name)
         value = pv.get(as_string=True, timeout=GET_TIMEOUT)
     else:
@@ -177,7 +188,7 @@ def process_file(file_name: str, include_udf=False, csv_output=False, use_pv=Fal
             else:
                 d[field_name] = value
 
-            # The undefined alarm status is sometimes reported as a numeric value
+            # The alarm status is sometimes reported as a numeric value
             # Convert to the string equivalent.
             if value in alarm_dict:
                 d[field_name] = alarm_dict[value]
@@ -241,6 +252,7 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
+    # Process input file. Trap keyboard exceptions (CTR-C).
     try:
         process_file(args.input_file, include_udf=args.include_udf,
                      csv_output=args.csv, use_pv=args.pv)

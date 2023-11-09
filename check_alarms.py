@@ -16,117 +16,11 @@ import argparse
 from typing import Union
 from epics import PV
 from epics import ca
-
-# Alarm field names
-ALARM_SEVERITY = 'SEVR'
-ALARM_STATUS = 'STAT'
-ALARM_MESSAGE = 'AMSG'
-NEW_ALARM_STATUS = 'NSTA'
-NEW_ALARM_SEVERITY = 'NSEV'
-NEW_ALARM_MESSAGE = 'NAMSG'
-DESCRIPTION = 'DESC'
-
-# Alarm values
-SEVERITY_INVALID = 'INVALID'
-SEVERITY_NO_ALARM = 'NO_ALARM'
-STATUS_NO_ALARM = 'NO_ALARM'
+from common import print_title, print_line, default_alarm_dictionary, ignore_alarms
+from common import field_list, message_field_list
 
 # Read timeout (seconds)
 GET_TIMEOUT = 5
-
-# Alarm fields that should be present in all records.
-# The description is in this list as well as additional data.
-field_list = (ALARM_SEVERITY, ALARM_STATUS, NEW_ALARM_SEVERITY,
-              NEW_ALARM_STATUS, DESCRIPTION)
-
-# Alarm message fields. They are not supported in older versions of EPICS
-message_field_list = (ALARM_MESSAGE, NEW_ALARM_MESSAGE)
-
-# How to format output
-short_fields = (ALARM_SEVERITY, ALARM_STATUS, NEW_ALARM_SEVERITY, NEW_ALARM_STATUS)
-long_fields = (DESCRIPTION, ALARM_MESSAGE, NEW_ALARM_MESSAGE)
-
-# Dictionary used to convert numeric status alarm codes into string values
-alarm_dict = {
-    '0': 'NO_ALARM',
-    '1': 'READ',
-    '2': 'WRITE',
-    '3': 'HIHI',
-    '4': 'HIGH',
-    '5': 'LOLO',
-    '6': 'LOW',
-    '7': 'STATE',
-    '8': 'COS',
-    '9': 'COMM',
-    '10': 'TIMEOUT',
-    '11': 'HW_LIMIT',
-    '12': 'CALC',
-    '13': 'SCAN',
-    '14': 'LINK',
-    '15': 'SOFT',
-    '16': 'BAD_SUB',
-    '17': 'UDF',
-    '18': 'DISABLE',
-    '19': 'SIMM',
-    '20': 'READ_ACCESS',
-    '21': 'WRITE_ACCESS',
-}
-
-
-def default_dictionary() -> dict:
-    """
-    Return a dictionary with default output values
-    :return: default value dictionary
-    """
-    d = {ALARM_SEVERITY: SEVERITY_NO_ALARM,
-         ALARM_STATUS: STATUS_NO_ALARM,
-         NEW_ALARM_SEVERITY: STATUS_NO_ALARM,
-         NEW_ALARM_STATUS: STATUS_NO_ALARM,
-         DESCRIPTION: '',
-         ALARM_MESSAGE: '',
-         NEW_ALARM_MESSAGE: ''
-         }
-    return d
-
-
-def print_title(csv_output=False):
-    """
-    Print report title
-    :param csv_output: csv output?
-    """
-    record_name_title = 'Record name'
-    if csv_output:
-        title = record_name_title
-        for field_name in short_fields + long_fields:
-            title += f',{field_name}'
-    else:
-        title = f'{record_name_title:30}'
-        for field_name in short_fields:
-            title += f'{field_name:15}'
-        for field_name in long_fields:
-            title += f'{field_name:25}'
-    print(title)
-
-
-def print_line(record_name: str, alarms: dict, csv_output=False):
-    """
-    Print report line
-    :param record_name: record name
-    :param alarms: dictionary with the alarm information
-    :param csv_output: csv output?
-    :return:
-    """
-    if csv_output:
-        line = record_name
-        for field_name in short_fields + long_fields:
-            line += f',{alarms[field_name]}'
-    else:
-        line = f'{record_name:30}'
-        for field_name in short_fields:
-            line += f'{alarms[field_name]:15}'
-        for field_name in long_fields:
-            line += f'{alarms[field_name]:25}'
-    print(line)
 
 
 def get_channel_value(record_name: str, field_name: str, use_pv=False) -> Union[str, None]:
@@ -173,7 +67,7 @@ def process_file(file_name: str, include_udf=False, csv_output=False, use_pv=Fal
         record_name = line.strip()
 
         timeout = False
-        d = default_dictionary()
+        d = default_alarm_dictionary()
 
         # Loop over the field names.
         # Break the loop if it fails to read.
@@ -190,8 +84,8 @@ def process_file(file_name: str, include_udf=False, csv_output=False, use_pv=Fal
 
             # The alarm status is sometimes reported as a numeric value
             # Convert to the string equivalent.
-            if value in alarm_dict:
-                d[field_name] = alarm_dict[value]
+            if value in d:
+                d[field_name] = d[value]
             else:
                 d[field_name] = value
 
@@ -212,12 +106,8 @@ def process_file(file_name: str, include_udf=False, csv_output=False, use_pv=Fal
         # Ignoring the UDF alarm state is also done at this point.
         if timeout:
             continue
-        else:
-            no_alarm = (d[ALARM_SEVERITY] == SEVERITY_NO_ALARM,
-                        d[ALARM_STATUS] == STATUS_NO_ALARM,
-                        d[NEW_ALARM_SEVERITY] == SEVERITY_NO_ALARM)
-            if all(no_alarm) or (d[ALARM_STATUS] == 'UDF' and not include_udf):
-                continue
+        elif ignore_alarms(d, include_udf=include_udf):
+            continue
 
         # The program will get here only if there are alarms
         print_line(record_name, d, csv_output=csv_output)

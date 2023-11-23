@@ -14,11 +14,15 @@ STATUS_NO_ALARM = 'NO_ALARM'
 
 # Alarm fields that should be present in all records.
 # The description is in this list as well as additional data.
+# The description is included for convenience
 field_list = (ALARM_SEVERITY, ALARM_STATUS, NEW_ALARM_SEVERITY,
               NEW_ALARM_STATUS, DESCRIPTION)
 
 # Alarm message fields. They are not supported in older versions of EPICS
 message_field_list = (ALARM_MESSAGE, NEW_ALARM_MESSAGE)
+
+# Alarm fields that have a numeric (enum) value
+numeric_field_list = (ALARM_SEVERITY, ALARM_STATUS, NEW_ALARM_SEVERITY, NEW_ALARM_STATUS)
 
 # How to format output
 short_fields = (ALARM_SEVERITY, ALARM_STATUS, NEW_ALARM_SEVERITY, NEW_ALARM_STATUS)

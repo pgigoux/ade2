@@ -58,7 +58,7 @@ def date_to_delta(date: str, time: str) -> float:
     if starting_time is None:
         starting_time = dt
     delta = dt - starting_time
-    print(dt, delta, delta.total_seconds())
+    # print(dt, delta, delta.total_seconds())
     return delta.total_seconds()
 
 
@@ -84,7 +84,7 @@ def extract_data(file_name: str, channel_name: str, channel_index: int) -> tuple
             # print(line)
             # t_out.append(date_to_datetime(line[1], line[2]))
             t = date_to_delta(line[INDEX_DATE], line[INDEX_TIME])
-            print(t, line[channel_index])
+            print('--', t, line[channel_index])
             if t < 0:
                 continue
             t_out.append(t)

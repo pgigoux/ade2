@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 """
+Process and plor the P1/P2 data from the A&G logs captured using capture_ag_wfs.sh
+
+
 interpol parameters
 
 A,B,C   old/middle/new demand
@@ -28,8 +31,10 @@ import matplotlib.pyplot as plt
 # Used to filter out lines with valid time stamps
 YEAR = datetime.now().year
 
+# Starting date. It is set to the first time stamp in the daya so plots are relative to the start of the data
 starting_time = None
 
+# Indices to extract data from the log lines
 INDEX_CHANNEL_NAME = 0
 INDEX_DATE = 1
 INDEX_TIME = 2
@@ -100,15 +105,29 @@ def extract_data(file_name: str, channel_name: str, channel_index: int) -> tuple
     return t_out, v_out
 
 
-def plot_data(label: str, t: list, v: list):
-    plt.title(label)
+def plot_data(title: str, t: list, v: list):
+    """
+    Plot single set of data
+    :param title: plot title
+    :param t: time list
+    :param v: value list
+    """
+    plt.title(title)
     plt.plot(t, v)
     plt.show()
 
 
-def plot_data_2(label: str, t_1: list, v_1: list, t_2: list, v_2: list):
+def plot_data_2(title: str, t_1: list, v_1: list, t_2: list, v_2: list):
+    """
+    Plot two sets of data
+    :param title: plot title
+    :param t_1: time list for set 1
+    :param v_1: value list for set 1
+    :param t_2: time list for set 2
+    :param v_2: value list for set 2
+    """
     fig, (ax1, ax2) = plt.subplots(2)
-    fig.suptitle(label)
+    fig.suptitle(title)
     ax1.plot(t_1, v_1)
     ax2.plot(t_2, v_2)
     plt.show()

@@ -108,20 +108,35 @@ def plot_data_2(label: str, t_1: list, v_1: list, t_2: list, v_2: list):
 
 def create_channel_dictionary(wfs_name: str) -> dict:
     return {
-        't1': (f'ag:{wfs_name}:interpol.A', 6),
-        'x1': (f'ag:{wfs_name}:interpol.A', 7),
-        'y1': (f'ag:{wfs_name}:interpol.A', 8),
-        'z1': (f'ag:{wfs_name}:interpol.A', 9),
+        # 't1': (f'ag:{wfs_name}:interpol.A', 6),
+        # 'x1': (f'ag:{wfs_name}:interpol.A', 7),
+        # 'y1': (f'ag:{wfs_name}:interpol.A', 8),
+        # 'z1': (f'ag:{wfs_name}:interpol.A', 9),
+        #
+        # 't2': (f'ag:{wfs_name}:interpol.B', 6),
+        # 'x2': (f'ag:{wfs_name}:interpol.B', 7),
+        # 'y2': (f'ag:{wfs_name}:interpol.B', 8),
+        # 'z2': (f'ag:{wfs_name}:interpol.B', 9),
+        #
+        # 't3': (f'ag:{wfs_name}:interpol.C', 6),
+        # 'x3': (f'ag:{wfs_name}:interpol.C', 7),
+        # 'y3': (f'ag:{wfs_name}:interpol.C', 8),
+        # 'z3': (f'ag:{wfs_name}:interpol.C', 9),
 
-        't2': (f'ag:{wfs_name}:interpol.B', 6),
-        'x2': (f'ag:{wfs_name}:interpol.B', 7),
-        'y2': (f'ag:{wfs_name}:interpol.B', 8),
-        'z2': (f'ag:{wfs_name}:interpol.B', 9),
+        't1': (f'ag:{wfs_name}:followA.VALA', 6),
+        'x1': (f'ag:{wfs_name}:followA.VALA', 7),
+        'y1': (f'ag:{wfs_name}:followA.VALA', 8),
+        'z1': (f'ag:{wfs_name}:followA.VALA', 9),
 
-        't3': (f'ag:{wfs_name}:interpol.C', 6),
-        'x3': (f'ag:{wfs_name}:interpol.C', 7),
-        'y3': (f'ag:{wfs_name}:interpol.C', 8),
-        'z3': (f'ag:{wfs_name}:interpol.C', 9),
+        't2': (f'ag:{wfs_name}:followA.VALB', 6),
+        'x2': (f'ag:{wfs_name}:followA.VALB', 7),
+        'y2': (f'ag:{wfs_name}:followA.VALB', 8),
+        'z2': (f'ag:{wfs_name}:followA.VALB', 9),
+
+        't3': (f'ag:{wfs_name}:followA.VALC', 6),
+        'x3': (f'ag:{wfs_name}:followA.VALC', 7),
+        'y3': (f'ag:{wfs_name}:followA.VALC', 8),
+        'z3': (f'ag:{wfs_name}:followA.VALC', 9),
 
         'x': (f'ag:{wfs_name}:interpol.VALA', 3),
         'y': (f'ag:{wfs_name}:interpol.VALB', 3),

@@ -12,15 +12,10 @@ set follow =    ( \
                     ag:${wfs}:followA.VALC \
                     ag:${wfs}:followA.VALD \
                     ag:${wfs}:followA.VALF \
-               )
+                    ag:${wfs}:followA.VALH \
+                )
 
 set interpol =  ( \
-                    ag:${wfs}:interpol.A \
-                    ag:${wfs}:interpol.B \
-                    ag:${wfs}:interpol.C \
-                    ag:${wfs}:interpol.D \
-                    ag:${wfs}:interpol.E \
-                    ag:${wfs}:interpol.F \
                     ag:${wfs}:interpol.VALA \
                     ag:${wfs}:interpol.VALB \
                     ag:${wfs}:interpol.VALC \
@@ -30,12 +25,10 @@ set interpol =  ( \
                     ag:${wfs}:interpol.VALG \
                     ag:${wfs}:interpol.VALH \
                     ag:${wfs}:interpol.VALI \
-               )
+                )
 
 set inpos =     ( \
                    ag:${wfs}:probeinPosition \
-               )
+                )
 
-#camonitor $follow $interpol $inpos
-camonitor $interpol $inpos
-
+camonitor $follow $interpol $inpos

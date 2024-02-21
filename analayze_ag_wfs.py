@@ -33,6 +33,11 @@ starting_time = None
 INDEX_CHANNEL_NAME = 0
 INDEX_DATE = 1
 INDEX_TIME = 2
+INDEX_DATA = 3
+INDEX_APPLY_TIME = 6
+INDEX_X = 7
+INDEX_Y = 8
+INDEX_Z = 9
 
 
 def date_to_datetime(date: str, time: str) -> datetime:
@@ -65,8 +70,11 @@ def date_to_delta(date: str, time: str) -> float:
 def extract_data(file_name: str, channel_name: str, channel_index: int) -> tuple:
     """
     Extract data matching the channel name from the file.
-    :param file_name:
-    :param channel_name:
+    Each file in the line consists of the channel name, date, time and data.
+    Data starts at INDEX_DATA and can continue for array data.
+    :param file_name: input file
+    :param channel_name: channel name to extract
+    :param channel_index: data index in the line
     :return:
     """
     m = re.compile(f'^{channel_name}.*{YEAR}')
@@ -123,33 +131,33 @@ def create_channel_dictionary(wfs_name: str) -> dict:
         # 'y3': (f'ag:{wfs_name}:interpol.C', 8),
         # 'z3': (f'ag:{wfs_name}:interpol.C', 9),
 
-        't1': (f'ag:{wfs_name}:followA.VALA', 6),
-        'x1': (f'ag:{wfs_name}:followA.VALA', 7),
-        'y1': (f'ag:{wfs_name}:followA.VALA', 8),
-        'z1': (f'ag:{wfs_name}:followA.VALA', 9),
+        't1': (f'ag:{wfs_name}:followA.VALA', INDEX_APPLY_TIME),
+        'x1': (f'ag:{wfs_name}:followA.VALA', INDEX_X),
+        'y1': (f'ag:{wfs_name}:followA.VALA', INDEX_Y),
+        'z1': (f'ag:{wfs_name}:followA.VALA', INDEX_Z),
 
-        't2': (f'ag:{wfs_name}:followA.VALB', 6),
-        'x2': (f'ag:{wfs_name}:followA.VALB', 7),
-        'y2': (f'ag:{wfs_name}:followA.VALB', 8),
-        'z2': (f'ag:{wfs_name}:followA.VALB', 9),
+        't2': (f'ag:{wfs_name}:followA.VALB', INDEX_APPLY_TIME),
+        'x2': (f'ag:{wfs_name}:followA.VALB', INDEX_X),
+        'y2': (f'ag:{wfs_name}:followA.VALB', INDEX_Y),
+        'z2': (f'ag:{wfs_name}:followA.VALB', INDEX_Z),
 
-        't3': (f'ag:{wfs_name}:followA.VALC', 6),
-        'x3': (f'ag:{wfs_name}:followA.VALC', 7),
-        'y3': (f'ag:{wfs_name}:followA.VALC', 8),
-        'z3': (f'ag:{wfs_name}:followA.VALC', 9),
+        't3': (f'ag:{wfs_name}:followA.VALC', INDEX_APPLY_TIME),
+        'x3': (f'ag:{wfs_name}:followA.VALC', INDEX_X),
+        'y3': (f'ag:{wfs_name}:followA.VALC', INDEX_Y),
+        'z3': (f'ag:{wfs_name}:followA.VALC', INDEX_Z),
 
-        'x': (f'ag:{wfs_name}:interpol.VALA', 3),
-        'y': (f'ag:{wfs_name}:interpol.VALB', 3),
-        'z': (f'ag:{wfs_name}:interpol.VALC', 3),
+        'x': (f'ag:{wfs_name}:interpol.VALA', INDEX_DATA),
+        'y': (f'ag:{wfs_name}:interpol.VALB', INDEX_DATA),
+        'z': (f'ag:{wfs_name}:interpol.VALC', INDEX_DATA),
 
-        'vx': (f'ag:{wfs_name}:interpol.VALD', 3),
-        'vy': (f'ag:{wfs_name}:interpol.VALE', 3),
-        'vz': (f'ag:{wfs_name}:interpol.VALF', 3),
+        'vx': (f'ag:{wfs_name}:interpol.VALD', INDEX_DATA),
+        'vy': (f'ag:{wfs_name}:interpol.VALE', INDEX_DATA),
+        'vz': (f'ag:{wfs_name}:interpol.VALF', INDEX_DATA),
 
-        't': (f'ag:{wfs_name}:interpol.VALG', 3),
+        't': (f'ag:{wfs_name}:interpol.VALG', INDEX_DATA),
 
-        'gs': (f'ag:{wfs_name}:interpol.VALH', 3),
-        's': (f'ag:{wfs_name}:interpol.VALI', 3)
+        'gs': (f'ag:{wfs_name}:interpol.VALH', INDEX_DATA),
+        's': (f'ag:{wfs_name}:interpol.VALI', INDEX_DATA)
     }
 
 

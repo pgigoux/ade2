@@ -191,9 +191,9 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('input_file', action='store', help='input file')
-    parser.add_argument('--c1', action='store',
+    parser.add_argument('p1', action='store',
                         help='first channel to plot')
-    parser.add_argument('--c2', action='store', default='',
+    parser.add_argument('p2', action='store', nargs='?', default='',
                         help='second channel to plot (optional)')
     parser.add_argument('--wfs', action='store', default='p1',
                         choices=['p1', 'p2'], help='wavefront sensor')
@@ -221,20 +221,20 @@ if __name__ == '__main__':
     t1, v1, t2, v2 = None, None, None, None
 
     # Extract data
-    if args.c1 in channel_dictionary:
-        t1, v1 = extract_data(args.input_file, channel_dictionary[args.c1][0],
-                              channel_dictionary[args.c1][1])
+    if args.p1 in channel_dictionary:
+        t1, v1 = extract_data(args.input_file, channel_dictionary[args.p1][0],
+                              channel_dictionary[args.p1][1])
 
-    if args.c2 in channel_dictionary:
-        t2, v2 = extract_data(args.input_file, channel_dictionary[args.c2][0],
-                              channel_dictionary[args.c2][1])
+    if args.p2 in channel_dictionary:
+        t2, v2 = extract_data(args.input_file, channel_dictionary[args.p2][0],
+                              channel_dictionary[args.p2][1])
 
     # Plot data
     if t1 is not None and t2 is not None:
-        plot_data_2(f'{args.input_file}: {args.c1} - {args.c2}', t1, v1, t2, v2)
+        plot_data_2(f'{args.input_file}: {args.p1} - {args.p2}', t1, v1, t2, v2)
     elif t1 is not None:
-        plot_data(f'{args.input_file}: {args.c1}', t1, v1)
+        plot_data(f'{args.input_file}: {args.p1}', t1, v1)
     elif t2 is not None:
-        plot_data(f'{args.input_file}: {args.c2}', t2, v2)
+        plot_data(f'{args.input_file}: {args.p2}', t2, v2)
     else:
         print(f'Nothing to plot')

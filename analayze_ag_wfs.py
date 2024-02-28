@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Process and plor the P1/P2 data from the A&G logs captured using capture_ag_wfs.sh
+Process and plot the P1/P2 data from the A&G logs captured using capture_ag_wfs.sh
 
 
 interpol parameters
@@ -49,7 +49,7 @@ def date_to_datetime(date: str, time: str) -> datetime:
     """
     Convert date and time to a datetime object
     :param date: date 'YYYY-MM-DD'
-    :param time: time 'HH:MM:SS.SSSSSS"
+    :param time: time 'HH:MM:SS.SSSSSS'
     :return: datetime object
     """
     s = f'{date} {time}'
@@ -60,7 +60,7 @@ def date_to_delta(date: str, time: str) -> float:
     """
     Convert date and time to a datetime object
     :param date: date 'YYYY-MM-DD'
-    :param time: time 'HH:MM:SS.SSSSSS"
+    :param time: time 'HH:MM:SS.SSSSSS'
     :return: seconds from reference
     """
     global starting_time
@@ -135,21 +135,6 @@ def plot_data_2(title: str, t_1: list, v_1: list, t_2: list, v_2: list):
 
 def create_channel_dictionary(wfs_name: str) -> dict:
     return {
-        # 't1': (f'ag:{wfs_name}:interpol.A', 6),
-        # 'x1': (f'ag:{wfs_name}:interpol.A', 7),
-        # 'y1': (f'ag:{wfs_name}:interpol.A', 8),
-        # 'z1': (f'ag:{wfs_name}:interpol.A', 9),
-        #
-        # 't2': (f'ag:{wfs_name}:interpol.B', 6),
-        # 'x2': (f'ag:{wfs_name}:interpol.B', 7),
-        # 'y2': (f'ag:{wfs_name}:interpol.B', 8),
-        # 'z2': (f'ag:{wfs_name}:interpol.B', 9),
-        #
-        # 't3': (f'ag:{wfs_name}:interpol.C', 6),
-        # 'x3': (f'ag:{wfs_name}:interpol.C', 7),
-        # 'y3': (f'ag:{wfs_name}:interpol.C', 8),
-        # 'z3': (f'ag:{wfs_name}:interpol.C', 9),
-
         't1': (f'ag:{wfs_name}:followA.VALA', INDEX_APPLY_TIME),
         'x1': (f'ag:{wfs_name}:followA.VALA', INDEX_X),
         'y1': (f'ag:{wfs_name}:followA.VALA', INDEX_Y),

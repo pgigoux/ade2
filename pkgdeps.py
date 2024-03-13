@@ -7,7 +7,8 @@ dependencies.
 
 By default, the program generates the build order.
 
-The -devel is stripped of the package dependencies to make things easier to handle.
+The -devel suffix is stripped off the package dependencies to make things easier to handle.
+In general, the BuildRequires dependencies have a -devel.
 """
 import os
 import re
@@ -145,21 +146,15 @@ def build_order(deps: dict) -> dict:
         if not b:
             order_dict[level].add(name)
     pending_set = name_set - order_dict[level]
-    # print('no deps', sorted(deps[level]))
-    # print('pending', sorted(pending_set))
 
     while len(pending_set) > 0 and level < 20:
         level += 1
         order_dict[level] = set()
-        # print('--', level, sorted(pending_set))
         for name in pending_set:
             r, b = deps[name]
-            # print('=', b)
             if len(pending_set.intersection(b)) == 0:
                 order_dict[level].add(name)
-            # print(level, name, b, deps[level])
         pending_set = pending_set - order_dict[level]
-        # print('    ', sorted(deps[level]))
 
     return order_dict
 
@@ -185,8 +180,8 @@ def print_dependencies(deps: dict):
         r, b = deps[key]
         if r or b:
             print(key)
-            print('  Requires:      ', r)
-            print('  BuildRequires: ', b)
+            print('  Requires:      ', sorted(r))
+            print('  BuildRequires: ', sorted(b))
 
 
 if __name__ == '__main__':

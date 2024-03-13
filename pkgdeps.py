@@ -1,8 +1,19 @@
+"""
+Determine the support package dependencies.
+
+This program assumes that the source of all the support packages are all located
+in the same directory, and that each package has a spec file that specifies its
+dependencies.
+
+By default, the program generates the build order.
+
+The -devel is stripped of the package dependencies to make things easier to handle.
+"""
 import os
 import re
+import argparse
 
-PKG_PATH = '/home/pgigoux/work/ade2/support'
-PKG_LIST = 'pkglist.txt'
+DEFAULT_PATH = os.getcwd()
 IGNORE = ['epics-base', 're2c', 'gemini-ade', 'rpcgen', 'libtirpc', 'tdct', 'psmisc', '%{name}']
 MATCH_REQ = '^Requires:'
 MATCH_BUILD = '^BuildRequires:'
@@ -12,7 +23,8 @@ DEVEL = '-devel'
 def spec_file(name: str):
     """
     Generate the spec file name from the package name
-    :param name: package
+    Most spec files are of the form "package_name.spec"
+    :param name: package name
     :return: spec file name with full path
     """
     if name == 'agseq':
@@ -27,10 +39,16 @@ def spec_file(name: str):
         root = 'geminirec'
     else:
         root = name
-    return os.path.join(PKG_PATH, name, f'{root}.spec')
+    return os.path.join(name, f'{root}.spec')
 
 
 def map_dependency(dep: str) -> str:
+    """
+    Map dependency name to package name.
+    They are normally the same, but there are a few exceptions.
+    :param dep: dependency name
+    :return: package name
+    """
     if dep == 'geminipcre':
         return 'pcre'
     elif dep == 'geminicalc':
@@ -41,7 +59,8 @@ def map_dependency(dep: str) -> str:
 
 def filter_line(line: str) -> set:
     """
-    Return a set with the package dependencies. Remove -devel packages.
+    Return a set with the package dependencies.
+    Remove -devel packages since they are redundant.
     :param line: input line
     :return: dependency set
     """
@@ -52,8 +71,9 @@ def filter_line(line: str) -> set:
 def process_file(file_name: str) -> tuple:
     """
     Process spec file
-    :param file_name:
-    :return:
+    It returns the "Requires" and "BuildRequires" sets in a tuple
+    :param file_name: spec file name
+    :return: tuple with dependencies
     """
     req_set = set()
     build_set = set()
@@ -64,37 +84,29 @@ def process_file(file_name: str) -> tuple:
                 req_set = req_set | filter_line(line)
             elif re.search(MATCH_BUILD, line):
                 build_set = build_set | filter_line(line)
-    # print('--', req_list, build_list)
     return req_set, build_set
 
 
-def process_package(name: str) -> tuple:
-    file_name = spec_file(name)
-    # print(file_name)
-    r, b = process_file(file_name)
-    return r, b
-
-
-def process_dependencies(file_name: str) -> dict:
+def process_dependencies(path_name: str, file_name: str) -> dict:
+    """
+    Process package dependencies
+    It returns a dictionary indexed by the package name where each entry
+    is a tuple of two sets with the "Requires" and "BuildRequires" dependencies.
+    :param path_name: directory where the package source is located
+    :param file_name: file containing the list of packages to process
+    :return: dictionary with dependencies
+    """
     d = {}
     try:
         f = open(file_name, 'r')
         for line in f:
-            line = line.strip()
-            d[line] = process_package(line)
+            package_name = line.strip()
+            spec_file_name = os.path.join(path_name, spec_file(package_name))
+            d[package_name] = process_file(spec_file_name)
         f.close()
         return d
     except IOError:
         print(f'{file_name} could not be processed')
-
-
-def print_dictionary(d: dict):
-    for key in sorted(d):
-        r, b = d[key]
-        if r or b:
-            print(key, b)
-            # print('\t', r)
-            # print('\t', b)
 
 
 def generate_dot_output(file_name: str, deps: dict):
@@ -103,7 +115,7 @@ def generate_dot_output(file_name: str, deps: dict):
     :param deps: dependency dictionary
     """
     f = open(file_name, 'w')
-    f.write('digraph rpms {\n')
+    f.write('digraph dependencies {\n')
     for key in deps:
         r, b = deps[key]
         if b:
@@ -115,96 +127,113 @@ def generate_dot_output(file_name: str, deps: dict):
     f.close()
 
 
-def print_order(deps: dict):
+def build_order(deps: dict) -> dict:
+    """
+    Determine the package build order_dict based on the package dependencies
+    It returns a dictionary where the key is a number starting from zero.
+    The zero entry contains all the packages with no dependencies.
+    :param deps: dependency dictionary
+    :return: build order_dict dictionary
+    """
     level = 0
-    d = {level: set()}
-
-    name_set = {_ for _ in deps}
+    order_dict = {level: set()}
 
     # Build the set of packages with no dependencies (level 0)
+    name_set = {_ for _ in deps}
     for name in name_set:
         r, b = deps[name]
         if not b:
-            d[level].add(name)
-    pending_set = name_set - d[level]
-    # print('no deps', sorted(d[level]))
+            order_dict[level].add(name)
+    pending_set = name_set - order_dict[level]
+    # print('no deps', sorted(deps[level]))
     # print('pending', sorted(pending_set))
 
-    while len(pending_set) > 0 and level < 10:
+    while len(pending_set) > 0 and level < 20:
         level += 1
-        d[level] = set()
+        order_dict[level] = set()
         # print('--', level, sorted(pending_set))
         for name in pending_set:
             r, b = deps[name]
             # print('=', b)
             if len(pending_set.intersection(b)) == 0:
-                d[level].add(name)
-            # print(level, name, b, d[level])
-        pending_set = pending_set - d[level]
-        # print('    ', sorted(d[level]))
+                order_dict[level].add(name)
+            # print(level, name, b, deps[level])
+        pending_set = pending_set - order_dict[level]
+        # print('    ', sorted(deps[level]))
 
-    print('Packages with no dependencies:')
-    print(' ', sorted(d[0]))
-    print('Build order:')
-    for key in d:
-        print(f' level: {key} {sorted(d[key])}')
+    return order_dict
 
 
-# def print_build_order(deps: dict):
-#     level = 0
-#     d = {level: []}
-#     name_list = [_ for _ in deps]
-#
-#     for name in name_list:
-#         r, b = deps[name]
-#         if not b:
-#             d[level].append(name)
-#             name_list.remove(name)
-#     print('no deps', d)
-#
-#     print('name_list', name_list)
-#
-#     while len(name_list) > 0:
-#         level += 1
-#         d[level] = []
-#
-#         for name in name_list:
-#             print('--', name)
-#             r, b = deps[name]
-#             print('b', b)
-#             found = False
-#             for dep in b:
-#                 if dep in d[level - 1] and dep not in name_list:
-#                     print(f'{dep} found')
-#                     found = True
-#             if found:
-#                 d[level].append(name)
-#                 name_list.remove(name)
-#                 print('remove', name, name_list)
-#         print(level, d[level])
-#         if level > 5:
-#             break
+def print_build_order(order_dict: dict):
+    """
+    Print the build order to the terminal
+    :param order_dict: build order dictionary
+    """
+    print('Build order. Packages with no dependencies have level zero:')
+    for level in sorted(order_dict):
+        for dep in sorted(order_dict[level]):
+            print(f'{level}: {dep}')
 
 
-# print(name_list)
-# while len(name_list) > 0:
-#     for name in name_list:
-#         r, b = deps[name]
-#         if not b:
-#             if level not in d:
-#                 d[level] = name
-#             else:
-#                 d[level].append(name)
-#             name_list.remove(name)
-#         else:
-#
-#     level += 1
+def print_dependencies(deps: dict):
+    """
+    Print a dependency dictionary is format easy to read
+    Used during debugging.
+    :param deps: dependency dictionary
+    """
+    for key in sorted(deps):
+        r, b = deps[key]
+        if r or b:
+            print(key)
+            print('  Requires:      ', r)
+            print('  BuildRequires: ', b)
 
 
 if __name__ == '__main__':
-    dep_dict = process_dependencies(PKG_LIST)
-    print_dictionary(dep_dict)
-    print('---')
-    print_order(dep_dict)
-    # print_build_order(dep_dict)
-    # generate_dot_output('test.dot', dep_dict)
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument(action='store',
+                        dest='input_file',
+                        help='file with package list',
+                        default='')
+
+    parser.add_argument('-d', '--deps',
+                        action='store_true',
+                        dest='deps',
+                        default=False,
+                        help='print dependencies instead of the build order?')
+
+    parser.add_argument('-p', '--path',
+                        action='store',
+                        dest='path',
+                        default=DEFAULT_PATH,
+                        help='include undefined records in the report (UDF)')
+
+    parser.add_argument('--dot',
+                        action='store_true',
+                        dest='dot',
+                        default=False,
+                        help='generate dot graph output?')
+
+    parser.add_argument('--dotfile',
+                        action='store',
+                        dest='dotfile',
+                        default='output.dot',
+                        help='dot file name')
+
+    args = parser.parse_args(['pkglist.txt', '--deps', '--path', '/home/pgigoux/work/ade2/support', '--dot'])
+    # args = parser.parse_args()
+
+    if len(args.input_file):
+        dep_dict = process_dependencies(args.path, args.input_file)
+        if args.deps:
+            print_dependencies(dep_dict)
+        else:
+            build_dict = build_order(dep_dict)
+            print_build_order(build_dict)
+
+        if args.dot:
+            generate_dot_output(args.dotfile, dep_dict)
+    else:
+        print('no input file')
+        exit(1)

@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 """
 Determine the support package dependencies.
 
@@ -216,8 +217,8 @@ if __name__ == '__main__':
                         default='output.dot',
                         help='dot file name')
 
-    args = parser.parse_args(['pkglist.txt', '--deps', '--path', '/home/pgigoux/work/ade2/support', '--dot'])
-    # args = parser.parse_args()
+    # args = parser.parse_args(['pkglist.txt', '--deps', '--path', '/home/pgigoux/work/ade2/support', '--dot'])
+    args = parser.parse_args()
 
     if len(args.input_file):
         dep_dict = process_dependencies(args.path, args.input_file)

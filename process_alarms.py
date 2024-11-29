@@ -49,7 +49,9 @@ def process_file(file_name: str) -> dict:
     last_record_name = ''
     with open(file_name, 'r') as f:
         for line in f:
-            pv_name, pv_val = line.strip().split(',')
+            t = line.strip().split(',')
+            pv_name, pv_val = t[0], t[1]
+            # print(pv_name, pv_val)
             record_name, field_name = pv_name.split('.')
             if record_name not in record_list:
                 record_list.append(record_name)
@@ -110,3 +112,4 @@ if __name__ == '__main__':
         print_data(alarm_dict, include_udf=args.include_udf, csv_output=args.csv)
     except KeyboardInterrupt:
         print('Aborted', file=sys.stderr)
+
